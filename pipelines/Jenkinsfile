@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_NAME = "artifact-manager"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo 'Cloning repository...'
+                // Normally: git clone
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                sh 'pip install -r src/requirements.txt || true'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker build -t artifact-manager .'
+            }
+        }
+
+        stage('Run Containers') {
+            steps {
+                echo 'Starting containers...'
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Test API') {
+            steps {
+                echo 'Testing application...'
+                sh 'curl http://localhost:5000/health'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
