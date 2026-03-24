@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artifact Manager Pro | Registry</title>
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --primary: #6366f1; /* Indigo shade */
+            --primary-light: #e0e7ff;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --success: #22c55e;
+            --border: #e2e8f0;
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar Navigation --- */
+        nav {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            flex-shrink: 0;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; }
+        .logo span { color: var(--primary); }
+
+        .nav-links { list-style: none; }
+        .nav-links li {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+        .nav-links li.active { background: var(--primary); color: white; }
+        .nav-links li:hover:not(.active) { background: #1e293b; color: white; }
+
+        /* --- Main Content --- */
+        main { flex-grow: 1; padding: 2rem 3rem; overflow-y: auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .stat-card small { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
+        .stat-card h3 { font-size: 1.5rem; margin-top: 5px; }
+
+        /* --- Upload & List Layout --- */
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .section-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        /* --- Modern Table --- */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 12px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.85rem; }
+        td { padding: 16px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        
+        .badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* --- Interactive Elements --- */
+        .search-bar {
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 300px;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 12px; font-size: 0.8rem; }
+        .btn-outline:hover { background: var(--primary); color: white; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; }
+        input[type="text"], input[type="file"] {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+        }
+
+        .success-banner {
+            display: none;
+            background: var(--success);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+        
+    <main>
+        <header>
+            <div>
+                <h1><span style="color: #2563eb;">Artifact</span> Manager</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Manage and deploy your build artifacts</p>
+            </div>
+            <div id="connectionStatus" class="badge" style="background: #dcfce7; color: #166534;">Backend Connected</div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><small>Total Artifacts</small><h3 id="countTotal">0</h3></div>
+            <div class="stat-card"><small>Registry Size</small><h3>1.2 GB</h3></div>
+            <div class="stat-card"><small>System Health</small><h3 style="color: var(--success);">Optimal</h3></div>
+        </div>
+
+        <div class="dashboard-content">
+            <section class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Registry Explorer</h2>
+                    <input type="text" id="searchInput" class="search-bar" placeholder="Search by name..." onkeyup="filterArtifacts()">
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Date Deployed</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artifactTableBody">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="emptyState" class="empty-state" style="text-align: center; padding: 2rem; display: none;">
+                    <p style="color: var(--text-muted);">No artifacts found in registry.</p>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2 style="margin-bottom: 1.5rem;">Deploy New</h2>
+                <div id="successMsg" class="success-banner">Artifact Deployed Successfully!</div>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>Artifact Binary</label>
+                        <input type="file" id="fileInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Semantic Versioning</label>
+                        <input type="text" id="versionInput" placeholder="e.g. 1.2.4-stable" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" style="width: 100%;">Push to Main</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let allArtifacts = [];
+
+        // 1. Fetch Data
+        async function fetchArtifacts() {
+            try {
+                const response = await fetch(`${API_BASE}/artifacts`);
+                allArtifacts = await response.json();
+                renderTable(allArtifacts);
+                document.getElementById('countTotal').innerText = allArtifacts.length;
+            } catch (error) {
+                console.error("Connection failed");
+                document.getElementById('connectionStatus').innerText = "Offline";
+                document.getElementById('connectionStatus').style.background = "#fee2e2";
+            }
+        }
+
+        // 2. Render Table
+        function renderTable(data) {
+            const tbody = document.getElementById('artifactTableBody');
+            const empty = document.getElementById('emptyState');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            // Sort Newest First
+            data.sort((a, b) => new Date(b.upload_time) - new Date(a.upload_time));
+
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td><strong>${item.name}</strong></td>
+                    <td><span class="badge">${item.version}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${item.upload_time}</td>
+                    <td><button class="btn btn-outline" onclick="downloadArtifact('${item.name}')">Download</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // 3. Search Filter
+        function filterArtifacts() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allArtifacts.filter(a => a.name.toLowerCase().includes(term));
+            renderTable(filtered);
+        }
+
+        // 4. Upload Logic
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('uploadBtn');
+            const formData = new FormData();
+            formData.append('file', document.getElementById('fileInput').files[0]);
+            formData.append('version', document.getElementById('versionInput').value);
+
+            btn.disabled = true;
+            btn.innerText = "Pushing...";
+
+            try {
+                const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+                if (res.ok) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('uploadForm').reset();
+                    setTimeout(() => { document.getElementById('successMsg').style.display = 'none'; }, 3000);
+                    fetchArtifacts();
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Push to Main";
+            }
+        });
+
+        function downloadArtifact(name) {
+            window.location.href = `${API_BASE}/download/${name}`;
+        }
+
+        window.onload = fetchArtifacts;
+    </script>
+</body>
+</html>

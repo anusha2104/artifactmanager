@@ -67,11 +67,20 @@ def list_artifacts():
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_artifact(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+    file_path = os.path.join(os.getcwd(), "storage", filename)
+
+    if os.path.exists(file_path):
+        return send_from_directory(os.path.join(os.getcwd(), "storage"), filename, as_attachment=True)
+    else:
+        return {"error": "File not found"}, 404
 
 @app.route("/health", methods=["GET"])
 def health():
     return {"status": "healthy"}
+
+@app.route("/ui")
+def ui():
+    return send_from_directory(os.path.join(os.getcwd(), "src/frontend"), "index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
