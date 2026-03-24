@@ -2,9 +2,11 @@ import os
 import hashlib
 from flask import Flask, request, jsonify, send_from_directory
 from datetime import datetime
+from flask_cors import CORS
 from db import get_connection
 
 app = Flask(__name__)
+CORS(app)
 
 UPLOAD_FOLDER = "storage"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
